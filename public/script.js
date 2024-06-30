@@ -1,10 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let currentUser = null;
-    let currentDate = new Date();
-
-    const loginForm = document.getElementById('login');
-    const loginSection = document.getElementById('loginForm');
-    const mainContent = document.getElementById('mainContent');
+    const loginForm = document.getElementById('login-form');
     const addBookForm = document.getElementById('addBookForm');
     const sellBookForm = document.getElementById('sellBookForm');
     const inventoryTableBody = document.getElementById('inventoryTableBody');
@@ -13,6 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const statisticsTotal = document.getElementById('statisticsTotal');
     const previousDayButton = document.getElementById('previousDay');
     const nextDayButton = document.getElementById('nextDay');
+    const loginSection = document.getElementById('login-section');
+    const inventorySection = document.getElementById('inventory-section');
+    const statisticsSection = document.getElementById('statistics-section');
+    let currentUser = null;
+    let currentDate = new Date();
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -24,12 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        const result = await response.json();
 
+        const result = await response.json();
         if (result.success) {
             currentUser = username;
             loginSection.style.display = 'none';
-            mainContent.style.display = 'block';
+            inventorySection.style.display = 'block';
+            statisticsSection.style.display = 'block';
             loadInventory();
             loadStatistics(currentDate);
         } else {
@@ -48,12 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ title, quantity, user: currentUser })
         });
 
-        if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
             alert(`Added ${quantity} copies of ${title}`);
             loadInventory();
-            loadStatistics(currentDate);
         } else {
-            alert('Error adding book');
+            alert('Failed to add book');
         }
     });
 
@@ -68,18 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, quantity, paymentType, user: currentUser })
         });
-        const result = await response.json();
 
-        if (response.ok) {
-            if (result.success) {
-                alert(`Sold ${quantity} copies of ${title} for ${paymentType}`);
-                loadInventory();
-                loadStatistics(currentDate);
-            } else {
-                alert('Out of stock');
-            }
+        const result = await response.json();
+        if (result.success) {
+            alert(`Sold ${quantity} copies of ${title}`);
+            loadStatistics(currentDate);
         } else {
-            alert('Error selling book');
+            alert(result.message);
         }
     });
 
@@ -96,107 +92,49 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadInventory() {
         const response = await fetch('/api/inventory');
         const inventory = await response.json();
+        inventoryTableBody.innerHTML = '';
         let total = 0;
 
-        inventoryTableBody.innerHTML = '';
-        inventory.forEach((item, index) => {
-            const totalAmount = item.quantity * item.price;
-            total += totalAmount;
-
-            const row = `
-                <tr>
-                    <td>${item.title}</td>
-                    <td>${item.quantity}</td>
-                    <td>${totalAmount.toLocaleString()}</td>
-                    <td><button class="btn btn-secondary edit-btn" data-index="${index}"><i class="fas fa-pen"></i></button></td>
-                </tr>
+        inventory.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.title}</td>
+                <td>${item.quantity}</td>
+                <td>${item.quantity * 100}</td>
+                <td><button class="btn btn-warning btn-edit">✎</button></td>
             `;
-            inventoryTableBody.insertAdjacentHTML('beforeend', row);
+            inventoryTableBody.appendChild(row);
+            total += item.quantity * 100;
         });
 
-        inventoryTotal.textContent = total.toLocaleString();
-        setupEditButtons();
+        inventoryTotal.textContent = total;
     }
 
     async function loadStatistics(date) {
-        const response = await fetch('/api/statistics', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date })
-        });
+        const formattedDate = date.toISOString().split('T')[0];
+        const response = await fetch(`/api/statistics?date=${formattedDate}`);
         const statistics = await response.json();
-        let total = 0;
-
         statisticsTableBody.innerHTML = '';
-        statistics.forEach((item, index) => {
-            const totalAmount = item.quantity * item.price;
-            if (item.action === 'Sold') {
-                total += totalAmount;
-            }
+        let totalSold = 0;
 
-            const row = `
-                <tr>
-                    <td>${item.action}</td>
-                    <td>${item.title}</td>
-                    <td>${item.quantity}</td>
-                    <td>${totalAmount.toLocaleString()}</td>
-                    <td>${new Date(item.timestamp).toLocaleString()}</td>
-                    <td>${item.paymentType}</td>
-                    <td>${item.user}</td>
-                    <td><button class="btn btn-danger delete-btn" data-index="${index}"><i class="fas fa-trash"></i></button></td>
-                </tr>
+        statistics.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.action}</td>
+                <td>${item.title}</td>
+                <td>${item.quantity}</td>
+                <td>${item.quantity * 100}</td>
+                <td>${item.date}</td>
+                <td>${item.paymentType}</td>
+                <td>${item.user}</td>
+                <td><button class="btn btn-danger btn-delete">🗑</button></td>
             `;
-            statisticsTableBody.insertAdjacentHTML('beforeend', row);
+            statisticsTableBody.appendChild(row);
+            if (item.action === 'sold') {
+                totalSold += item.quantity * 100;
+            }
         });
 
-        statisticsTotal.textContent = total.toLocaleString();
-        setupDeleteButtons();
-    }
-
-    function setupEditButtons() {
-        const editButtons = document.querySelectorAll('.edit-btn');
-
-        editButtons.forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const index = event.target.dataset.index;
-                const password = prompt('Enter password:');
-
-                if (password === 'Rasul9898aa') {
-                    const newQuantity = prompt('Enter new quantity:');
-                    if (newQuantity !== null) {
-                        await fetch('/api/edit-inventory', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ index, quantity: newQuantity })
-                        });
-                        loadInventory();
-                    }
-                } else {
-                    alert('Invalid password.');
-                }
-            });
-        });
-    }
-
-    function setupDeleteButtons() {
-        const deleteButtons = document.querySelectorAll('.delete-btn');
-
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const index = event.target.dataset.index;
-                const password = prompt('Enter password:');
-
-                if (password === 'Rasul9898aa') {
-                    await fetch('/api/delete-transaction', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ index })
-                    });
-                    loadStatistics(currentDate);
-                } else {
-                    alert('Invalid password.');
-                }
-            });
-        });
+        statisticsTotal.textContent = totalSold;
     }
 });
