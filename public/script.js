@@ -1,31 +1,43 @@
-const BASE_URL = 'https://harvardbks-974c895495ee.herokuapp.com';
+const BASE_URL = 'https://kitobchi-d505dd994d30.herokuapp.com';
+
 let currentDate = new Date();
+let currentUser = null;
+
+function updateDateDisplay() {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDateDisplay').innerText = currentDate.toLocaleDateString(undefined, options);
+}
 
 function loadInventory() {
     fetch(`${BASE_URL}/api/data`)
         .then(response => response.json())
         .then(data => {
-            const inventoryTable = document.getElementById('inventoryTable').getElementsByTagName('tbody')[0];
-            inventoryTable.innerHTML = '';
-            let totalInventory = 0;
+            const inventoryTableBody = document.querySelector('#inventoryTable tbody');
+            inventoryTableBody.innerHTML = '';
+
+            let totalValue = 0;
 
             data.books.forEach((book, index) => {
-                const row = inventoryTable.insertRow();
-                row.insertCell().textContent = book.title;
-                row.insertCell().textContent = book.price.toLocaleString();
-                row.insertCell().textContent = book.quantity;
-                row.insertCell().textContent = (book.price * book.quantity).toLocaleString();
-                totalInventory += book.price * book.quantity;
+                const row = document.createElement('tr');
+                const total = book.price * book.quantity;
+                totalValue += total;
 
-                const editCell = row.insertCell();
-                const editIcon = document.createElement('i');
-                editIcon.classList.add('bi', 'bi-pencil-square', 'edit-icon');
-                editIcon.style.cursor = 'pointer';
-                editIcon.addEventListener('click', () => editBook(index, book.title));
-                editCell.appendChild(editIcon);
+                row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.quantity}</td>
+                    <td>${total.toLocaleString()}</td>
+                    <td><button class="btn btn-primary btn-sm" onclick="editBook(${index}, '${book.title}')"><i class="fas fa-pen"></i></button></td>
+                `;
+
+                inventoryTableBody.appendChild(row);
             });
 
-            document.getElementById('totalInventory').textContent = totalInventory.toLocaleString();
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td colspan="2"><strong>Total Value</strong></td>
+                <td colspan="2"><strong>${totalValue.toLocaleString()} UZS</strong></td>
+            `;
+            inventoryTableBody.appendChild(totalRow);
         });
 }
 
@@ -33,220 +45,219 @@ function loadTodaysStats(date) {
     fetch(`${BASE_URL}/api/data`)
         .then(response => response.json())
         .then(data => {
-            const statsTable = document.getElementById('statsTable').getElementsByTagName('tbody')[0];
-            statsTable.innerHTML = '';
-            let totalStats = 0;
+            const statsTableBody = document.querySelector('#todaysStatsTable tbody');
+            statsTableBody.innerHTML = '';
 
-            data.transactions.filter(transaction => new Date(transaction.timestamp).toDateString() === date.toDateString()).forEach((transaction, index) => {
-                const row = statsTable.insertRow();
-                row.insertCell().textContent = transaction.action;
-                row.insertCell().textContent = transaction.book;
-                row.insertCell().textContent = transaction.quantity;
-                row.insertCell().textContent = transaction.total.toLocaleString();
-                row.insertCell().textContent = transaction.timestamp;
-
-                const deleteCell = row.insertCell();
-                if (transaction.action === 'Sold') {
-                    totalStats += transaction.total;
-                    const deleteIcon = document.createElement('i');
-                    deleteIcon.classList.add('bi', 'bi-trash', 'delete-icon');
-                    deleteIcon.style.cursor = 'pointer';
-                    deleteIcon.addEventListener('click', () => deleteTransaction(index));
-                    deleteCell.appendChild(deleteIcon);
-                }
+            const filteredTransactions = data.transactions.filter(transaction => {
+                return new Date(transaction.timestamp).toDateString() === date.toDateString();
             });
 
-            document.getElementById('totalStats').textContent = totalStats.toLocaleString();
-            document.getElementById('statsDate').textContent = date.toDateString();
+            let totalSales = 0;
+            let addedBooks = 0;
+
+            filteredTransactions.forEach((transaction, index) => {
+                const row = document.createElement('tr');
+                if (transaction.action === 'Sold') {
+                    totalSales += transaction.total;
+                } else if (transaction.action === 'Added') {
+                    addedBooks += transaction.quantity;
+                }
+
+                row.innerHTML = `
+                    <td>${transaction.action}</td>
+                    <td>${transaction.book}</td>
+                    <td>${transaction.quantity}</td>
+                    <td>${transaction.total.toLocaleString()}</td>
+                    <td>${transaction.timestamp}</td>
+                    <td>${transaction.paymentType || ''}</td>
+                    <td>${transaction.user}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})"><i class="fas fa-trash"></i></button></td>
+                `;
+
+                statsTableBody.appendChild(row);
+            });
+
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td colspan="2"><strong>Total Sales</strong></td>
+                <td colspan="6"><strong>${totalSales.toLocaleString()} UZS</strong></td>
+            `;
+            statsTableBody.appendChild(totalRow);
+
+            const addedRow = document.createElement('tr');
+            addedRow.innerHTML = `
+                <td colspan="2"><strong>Total Books Added</strong></td>
+                <td colspan="6"><strong>${addedBooks}</strong></td>
+            `;
+            statsTableBody.appendChild(addedRow);
         });
 }
 
-document.getElementById('addBookForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+document.getElementById('addBookForm').addEventListener('submit', function (e) {
+    e.preventDefault();
     addBook();
 });
 
-document.getElementById('sellBookForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+document.getElementById('sellBookForm').addEventListener('submit', function (e) {
+    e.preventDefault();
     sellBook();
+});
+
+document.getElementById('login').addEventListener('submit', function (e) {
+    e.preventDefault();
+    login();
 });
 
 function addBook() {
     const title = document.getElementById('bookTitle').value;
     const quantity = parseInt(document.getElementById('quantity').value);
 
-    fetch(`${BASE_URL}/api/books`, {
+    fetch(`${BASE_URL}/api/add-book`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title: title, price: getPrice(title), quantity: quantity })
+        body: JSON.stringify({ title, quantity, user: currentUser }),
     })
         .then(response => response.json())
-        .then(() => {
-            alert(`${quantity} copies of "${title}" added.`);
+        .then(data => {
+            alert(`${data.quantity} copies of "${data.title}" added.`);
             loadInventory();
-            addTransaction('Added', title, quantity);
+            loadTodaysStats(currentDate);
         });
 }
 
 function sellBook() {
     const title = document.getElementById('sellBookTitle').value;
     const quantity = parseInt(document.getElementById('sellQuantity').value);
+    const paymentType = document.getElementById('paymentType').value;
 
-    fetch(`${BASE_URL}/api/data`)
-        .then(response => response.json())
-        .then(data => {
-            const book = data.books.find(book => book.title === title);
-            if (!book || book.quantity < quantity) {
-                alert('Out of stock');
-                return;
-            }
-
-            fetch(`${BASE_URL}/api/books`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ title: title, price: getPrice(title), quantity: -quantity })
-            })
-                .then(response => response.json())
-                .then(() => {
-                    alert(`${quantity} copies of "${title}" sold.`);
-                    loadInventory();
-                    addTransaction('Sold', title, quantity);
-                });
-        });
-}
-
-function getPrice(title) {
-    const prices = {
-        "Beginner": 85000,
-        "Elementary": 85000,
-        "Pre-Intermediate": 85000,
-        "Intermediate": 85000,
-        "Kids Level 1": 60000,
-        "Kids Level 2": 60000,
-        "Kids Level 3": 60000,
-        "Kids Level 4": 60000,
-        "Kids Level 5": 60000,
-        "Kids Level 6": 60000,
-        "Kids High Level 1": 60000,
-        "Kids High Level 2": 60000,
-        "Listening Beginner": 30000,
-        "Listening Elementary": 30000,
-        "Listening Pre-Intermediate": 30000,
-        "Listening Intermediate": 35000
-    };
-    return prices[title] || 0;
-}
-
-function addTransaction(action, title, quantity) {
-    const total = getPrice(title) * quantity;
-    const timestamp = new Date().toLocaleString();
-
-    fetch(`${BASE_URL}/api/transactions`, {
+    fetch(`${BASE_URL}/api/sell-book`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action, book: title, quantity, total, timestamp })
+        body: JSON.stringify({ title, quantity, paymentType, user: currentUser }),
     })
         .then(response => response.json())
-        .then(() => {
+        .then(data => {
+            if (data.success) {
+                alert(`${data.quantity} copies of "${data.title}" sold.`);
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+            loadInventory();
             loadTodaysStats(currentDate);
         });
 }
 
 function editBook(index, title) {
     const password = prompt("Enter password to edit:");
-    if (password !== 'Rasul9898aa') {
-        alert('Incorrect password');
-        return;
+    if (password === 'Rasul9898aa') {
+        const newQuantity = prompt(`Enter new quantity for ${title}:`);
+        if (newQuantity !== null) {
+            fetch(`${BASE_URL}/api/edit-book`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index, newQuantity: parseInt(newQuantity) }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loadInventory();
+                    loadTodaysStats(currentDate);
+                });
+        }
+    } else {
+        alert('Incorrect password.');
     }
-
-    const newQuantity = parseInt(prompt(`Enter new quantity for ${title}:`));
-    if (isNaN(newQuantity)) {
-        alert('Invalid quantity');
-        return;
-    }
-
-    fetch(`${BASE_URL}/api/books/${index}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ quantity: newQuantity })
-    })
-        .then(response => response.json())
-        .then(() => {
-            loadInventory();
-        });
 }
 
 function deleteTransaction(index) {
     const password = prompt("Enter password to delete:");
-    if (password !== 'Rasul9898aa') {
-        alert('Incorrect password');
-        return;
+    if (password === 'Rasul9898aa') {
+        fetch(`${BASE_URL}/api/delete-transaction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ index }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                loadTodaysStats(currentDate);
+            });
+    } else {
+        alert('Incorrect password.');
     }
+}
 
-    fetch(`${BASE_URL}/api/transactions/${index}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(() => {
-            loadTodaysStats(currentDate);
+function exportCurrentInventory() {
+    fetch(`${BASE_URL}/api/export-inventory`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'current_inventory.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+}
+
+function exportTodaysStatistics() {
+    fetch(`${BASE_URL}/api/export-todays-statistics`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'todays_statistics.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         });
 }
 
 function previousDay() {
     currentDate.setDate(currentDate.getDate() - 1);
+    updateDateDisplay();
     loadTodaysStats(currentDate);
 }
 
 function nextDay() {
     currentDate.setDate(currentDate.getDate() + 1);
+    updateDateDisplay();
     loadTodaysStats(currentDate);
 }
 
-function exportCurrentInventory() {
-    fetch(`${BASE_URL}/api/data`)
+function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    fetch(`${BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+    })
         .then(response => response.json())
         .then(data => {
-            const csv = convertToCSV(data.books);
-            downloadCSV(csv, 'current_inventory.csv');
+            if (data.success) {
+                currentUser = username;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadInventory();
+                loadTodaysStats(currentDate);
+            } else {
+                alert('Incorrect username or password.');
+            }
         });
-}
-
-function exportTodaysStatistics() {
-    fetch(`${BASE_URL}/api/data`)
-        .then(response => response.json())
-        .then(data => {
-            const csv = convertToCSV(data.transactions.filter(transaction => new Date(transaction.timestamp).toDateString() === currentDate.toDateString()));
-            downloadCSV(csv, 'todays_statistics.csv');
-        });
-}
-
-function convertToCSV(data) {
-    const array = [Object.keys(data[0])].concat(data);
-
-    return array.map(row => {
-        return Object.values(row).map(value => {
-            return typeof value === 'string' ? JSON.stringify(value) : value;
-        }).toString();
-    }).join('\n');
-}
-
-function downloadCSV(csv, filename) {
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    loadInventory();
-    loadTodaysStats(currentDate);
+    updateDateDisplay();
 });
