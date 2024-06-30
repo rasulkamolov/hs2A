@@ -5,151 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Inventory</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Book Inventory</h1>
-        <div id="loginForm">
+    <div class="container">
+        <div id="login-section">
             <h2>Login</h2>
-            <form id="login">
+            <form id="login-form">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" class="form-control" id="username" required>
+                    <input type="text" id="username" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" required>
+                    <input type="password" id="password" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Login</button>
             </form>
         </div>
-        <div id="mainContent" style="display:none;">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h2>Add Book</h2>
-                    <form id="addBookForm">
-                        <div class="form-group">
-                            <label for="bookTitle">Book Title</label>
-                            <select class="form-control" id="bookTitle">
-                                <option>Beginner</option>
-                                <option>Elementary</option>
-                                <option>Pre-Intermediate</option>
-                                <option>Intermediate</option>
-                                <option>Kids Level 1</option>
-                                <option>Kids Level 2</option>
-                                <option>Kids Level 3</option>
-                                <option>Kids Level 4</option>
-                                <option>Kids Level 5</option>
-                                <option>Kids Level 6</option>
-                                <option>Kids High Level 1</option>
-                                <option>Kids High Level 2</option>
-                                <option>Listening Beginner</option>
-                                <option>Listening Elementary</option>
-                                <option>Listening Pre-Intermediate</option>
-                                <option>Listening Intermediate</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity">Quantity</label>
-                            <input type="number" class="form-control" id="quantity" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Book</button>
-                    </form>
-                </div>
 
-                <div class="col-md-6">
-                    <h2>Sell Book</h2>
-                    <form id="sellBookForm">
-                        <div class="form-group">
-                            <label for="sellBookTitle">Book Title</label>
-                            <select class="form-control" id="sellBookTitle">
-                                <option>Beginner</option>
-                                <option>Elementary</option>
-                                <option>Pre-Intermediate</option>
-                                <option>Intermediate</option>
-                                <option>Kids Level 1</option>
-                                <option>Kids Level 2</option>
-                                <option>Kids Level 3</option>
-                                <option>Kids Level 4</option>
-                                <option>Kids Level 5</option>
-                                <option>Kids Level 6</option>
-                                <option>Kids High Level 1</option>
-                                <option>Kids High Level 2</option>
-                                <option>Listening Beginner</option>
-                                <option>Listening Elementary</option>
-                                <option>Listening Pre-Intermediate</option>
-                                <option>Listening Intermediate</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="sellQuantity">Quantity</label>
-                            <input type="number" class="form-control" id="sellQuantity" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="paymentType">Payment Type</label>
-                            <select class="form-control" id="paymentType">
-                                <option>Cash</option>
-                                <option>Click</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-danger">Sell Book</button>
-                    </form>
+        <div id="inventory-section" style="display: none;">
+            <h2>Book Inventory</h2>
+            <form id="addBookForm">
+                <div class="form-group">
+                    <label for="bookTitle">Book Title</label>
+                    <select id="bookTitle" class="form-control">
+                        <option value="Beginner">Beginner</option>
+                        <option value="Elementary">Elementary</option>
+                        <option value="Pre-Intermediate">Pre-Intermediate</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Kids Level 1">Kids Level 1</option>
+                        <option value="Kids Level 2">Kids Level 2</option>
+                        <option value="Kids Level 3">Kids Level 3</option>
+                        <option value="Kids Level 4">Kids Level 4</option>
+                        <option value="Kids Level 5">Kids Level 5</option>
+                        <option value="Kids Level 6">Kids Level 6</option>
+                        <option value="Kids High Level 1">Kids High Level 1</option>
+                        <option value="Kids High Level 2">Kids High Level 2</option>
+                        <option value="Listening Beginner">Listening Beginner</option>
+                        <option value="Listening Elementary">Listening Elementary</option>
+                        <option value="Listening Pre-Intermediate">Listening Pre-Intermediate</option>
+                        <option value="Listening Intermediate">Listening Intermediate</option>
+                    </select>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-success">Add Book</button>
+            </form>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Quantity</th>
+                        <th>Total Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody"></tbody>
+            </table>
+            <p><strong>Total:</strong> <span id="inventoryTotal">0</span></p>
+        </div>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <h2>Current Inventory</h2>
-                    <table class="table table-bordered" id="inventoryTable">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Quantity</th>
-                                <th>Total Value (UZS)</th>
-                                <th>Edit</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div class="text-right">
-                        <button class="btn btn-success" onclick="exportCurrentInventory()">Export Current Inventory</button>
-                    </div>
+        <div id="statistics-section" style="display: none;">
+            <h2>Today's Statistics</h2>
+            <form id="sellBookForm">
+                <div class="form-group">
+                    <label for="sellBookTitle">Book Title</label>
+                    <select id="sellBookTitle" class="form-control">
+                        <option value="Beginner">Beginner</option>
+                        <option value="Elementary">Elementary</option>
+                        <option value="Pre-Intermediate">Pre-Intermediate</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Kids Level 1">Kids Level 1</option>
+                        <option value="Kids Level 2">Kids Level 2</option>
+                        <option value="Kids Level 3">Kids Level 3</option>
+                        <option value="Kids Level 4">Kids Level 4</option>
+                        <option value="Kids Level 5">Kids Level 5</option>
+                        <option value="Kids Level 6">Kids Level 6</option>
+                        <option value="Kids High Level 1">Kids High Level 1</option>
+                        <option value="Kids High Level 2">Kids High Level 2</option>
+                        <option value="Listening Beginner">Listening Beginner</option>
+                        <option value="Listening Elementary">Listening Elementary</option>
+                        <option value="Listening Pre-Intermediate">Listening Pre-Intermediate</option>
+                        <option value="Listening Intermediate">Listening Intermediate</option>
+                    </select>
                 </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-12">
-                    <h2>Today's Statistics</h2>
-                    <div class="d-flex justify-content-between mb-3">
-                        <button class="btn btn-primary" onclick="previousDay()">Previous Day</button>
-                        <div id="currentDateDisplay"></div>
-                        <button class="btn btn-primary" onclick="nextDay()">Next Day</button>
-                    </div>
-                    <table class="table table-bordered" id="todaysStatsTable">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Book</th>
-                                <th>Quantity</th>
-                                <th>Total (UZS)</th>
-                                <th>Timestamp</th>
-                                <th>Payment Type</th>
-                                <th>User</th>
-                                <th>Delete</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div class="text-right">
-                        <button class="btn btn-success" onclick="exportTodaysStatistics()">Export Today's Statistics</button>
-                    </div>
+                <div class="form-group">
+                    <label for="sellQuantity">Quantity</label>
+                    <input type="number" id="sellQuantity" class="form-control" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="paymentType">Payment Type</label>
+                    <select id="paymentType" class="form-control">
+                        <option value="Cash">Cash</option>
+                        <option value="Click">Click</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-danger">Sell Book</button>
+            </form>
+            <button id="previousDay" class="btn btn-secondary">Previous</button>
+            <button id="nextDay" class="btn btn-secondary">Next</button>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Title</th>
+                        <th>Quantity</th>
+                        <th>Total Amount</th>
+                        <th>Date</th>
+                        <th>Payment Type</th>
+                        <th>User</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="statisticsTableBody"></tbody>
+            </table>
+            <p><strong>Total Sold:</strong> <span id="statisticsTotal">0</span></p>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
