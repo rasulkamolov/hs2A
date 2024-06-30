@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Inventory App</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Book Inventory App</h1>
+        <div id="loginForm">
+            <form id="login">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h3>Add Book</h3>
+                    <form id="addBookForm">
+                        <div class="form-group">
+                            <label for="bookTitle">Book Title</label>
+                            <select class="form-control" id="bookTitle" required>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Elementary">Elementary</option>
+                                <option value="Pre-Intermediate">Pre-Intermediate</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Kids Level 1">Kids Level 1</option>
+                                <option value="Kids Level 2">Kids Level 2</option>
+                                <option value="Kids Level 3">Kids Level 3</option>
+                                <option value="Kids Level 4">Kids Level 4</option>
+                                <option value="Kids Level 5">Kids Level 5</option>
+                                <option value="Kids Level 6">Kids Level 6</option>
+                                <option value="Kids High Level 1">Kids High Level 1</option>
+                                <option value="Kids High Level 2">Kids High Level 2</option>
+                                <option value="Listening Beginner">Listening Beginner</option>
+                                <option value="Listening Elementary">Listening Elementary</option>
+                                <option value="Listening Pre-Intermediate">Listening Pre-Intermediate</option>
+                                <option value="Listening Intermediate">Listening Intermediate</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Book</button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <h3>Sell Book</h3>
+                    <form id="sellBookForm">
+                        <div class="form-group">
+                            <label for="sellBookTitle">Book Title</label>
+                            <select class="form-control" id="sellBookTitle" required>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Elementary">Elementary</option>
+                                <option value="Pre-Intermediate">Pre-Intermediate</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Kids Level 1">Kids Level 1</option>
+                                <option value="Kids Level 2">Kids Level 2</option>
+                                <option value="Kids Level 3">Kids Level 3</option>
+                                <option value="Kids Level 4">Kids Level 4</option>
+                                <option value="Kids Level 5">Kids Level 5</option>
+                                <option value="Kids Level 6">Kids Level 6</option>
+                                <option value="Kids High Level 1">Kids High Level 1</option>
+                                <option value="Kids High Level 2">Kids High Level 2</option>
+                                <option value="Listening Beginner">Listening Beginner</option>
+                                <option value="Listening Elementary">Listening Elementary</option>
+                                <option value="Listening Pre-Intermediate">Listening Pre-Intermediate</option>
+                                <option value="Listening Intermediate">Listening Intermediate</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sellQuantity">Quantity</label>
+                            <input type="number" class="form-control" id="sellQuantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentType">Payment Type</label>
+                            <select class="form-control" id="paymentType" required>
+                                <option value="Cash">Cash</option>
+                                <option value="Click">Click</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sell Book</button>
+                    </form>
+                </div>
+            </div>
+
+            <h3 class="mt-4">Current Inventory</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Quantity</th>
+                        <th>Total Amount</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="2">Total:</th>
+                        <th id="inventoryTotal"></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <h3 class="mt-4">Today's Statistics</h3>
+            <button id="previousDay" class="btn btn-secondary">Previous</button>
+            <button id="nextDay" class="btn btn-secondary">Next</button>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Book</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Timestamp</th>
+                        <th>Payment Type</th>
+                        <th>User</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="statisticsTableBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3">Total Sold:</th>
+                        <th id="statisticsTotal"></th>
+                        <th colspan="2"></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

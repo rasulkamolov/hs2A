@@ -1,0 +1,16 @@
+body {
+    padding-top: 20px;
+}
+
+.table td, .table th {
+    text-align: center;
+}
+
+.red-dot {
+    height: 10px;
+    width: 10px;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 5px;
+}

@@ -125,22 +125,22 @@ app.get('/api/export-todays-statistics', (req, res) => {
 
 function getPrice(title) {
     const prices = {
-        "Beginner": 10000,
-        "Elementary": 11000,
-        "Pre-Intermediate": 12000,
-        "Intermediate": 13000,
-        "Kids Level 1": 9000,
-        "Kids Level 2": 9000,
-        "Kids Level 3": 9000,
-        "Kids Level 4": 9000,
-        "Kids Level 5": 9000,
-        "Kids Level 6": 9000,
-        "Kids High Level 1": 10000,
-        "Kids High Level 2": 10000,
-        "Listening Beginner": 9500,
-        "Listening Elementary": 9500,
-        "Listening Pre-Intermediate": 9500,
-        "Listening Intermediate": 9500
+        "Beginner": 85000,
+        "Elementary": 85000,
+        "Pre-Intermediate": 85000,
+        "Intermediate": 85000,
+        "Kids Level 1": 60000,
+        "Kids Level 2": 60000,
+        "Kids Level 3": 60000,
+        "Kids Level 4": 60000,
+        "Kids Level 5": 60000,
+        "Kids Level 6": 60000,
+        "Kids High Level 1": 60000,
+        "Kids High Level 2": 60000,
+        "Listening Beginner": 30000,
+        "Listening Elementary": 30000,
+        "Listening Pre-Intermediate": 30000,
+        "Listening Intermediate": 35000
     };
     return prices[title] || 0;
 }
