@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Inventory App</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-4">Book Inventory App</h1>
         <div id="loginForm">
+            <h2>Login</h2>
             <form id="login">
                 <div class="form-group">
                     <label for="username">Username</label>
@@ -24,13 +24,14 @@
             </form>
         </div>
 
-        <div id="mainContent" style="display: none;">
-            <div class="row mt-4">
+        <div id="mainContent" style="display:none;">
+            <h1>Book Inventory App</h1>
+            <div class="row">
                 <div class="col-md-6">
                     <h3>Add Book</h3>
                     <form id="addBookForm">
                         <div class="form-group">
-                            <label for="bookTitle">Book Title</label>
+                            <label for="bookTitle">Title</label>
                             <select class="form-control" id="bookTitle" required>
                                 <option value="Beginner">Beginner</option>
                                 <option value="Elementary">Elementary</option>
@@ -61,7 +62,7 @@
                     <h3>Sell Book</h3>
                     <form id="sellBookForm">
                         <div class="form-group">
-                            <label for="sellBookTitle">Book Title</label>
+                            <label for="sellBookTitle">Title</label>
                             <select class="form-control" id="sellBookTitle" required>
                                 <option value="Beginner">Beginner</option>
                                 <option value="Elementary">Elementary</option>

@@ -40,28 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
     addBookForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const title = document.getElementById('bookTitle').value;
-        const quantity = parseInt(document.getElementById('quantity').value, 10);
+        const quantity = parseInt(document.getElementById('quantity').value);
 
         const response = await fetch('/api/add-book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, quantity, user: currentUser })
         });
-        const result = await response.json();
 
-        if (result.title) {
-            alert(`${quantity} copies of "${result.title}" added.`);
+        if (response.ok) {
+            alert(`Added ${quantity} copies of ${title}`);
             loadInventory();
             loadStatistics(currentDate);
         } else {
-            alert('Error adding book.');
+            alert('Error adding book');
         }
     });
 
     sellBookForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const title = document.getElementById('sellBookTitle').value;
-        const quantity = parseInt(document.getElementById('sellQuantity').value, 10);
+        const quantity = parseInt(document.getElementById('sellQuantity').value);
         const paymentType = document.getElementById('paymentType').value;
 
         const response = await fetch('/api/sell-book', {
@@ -71,12 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await response.json();
 
-        if (result.success) {
-            alert(`${quantity} copies of "${title}" sold.`);
-            loadInventory();
-            loadStatistics(currentDate);
+        if (response.ok) {
+            if (result.success) {
+                alert(`Sold ${quantity} copies of ${title} for ${paymentType}`);
+                loadInventory();
+                loadStatistics(currentDate);
+            } else {
+                alert('Out of stock');
+            }
         } else {
-            alert(result.message || 'Error selling book.');
+            alert('Error selling book');
         }
     });
 
@@ -91,41 +94,83 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function loadInventory() {
-        const response = await fetch('/api/data');
-        const data = await response.json();
-
-        inventoryTableBody.innerHTML = '';
+        const response = await fetch('/api/inventory');
+        const inventory = await response.json();
         let total = 0;
 
-        data.books.forEach((book, index) => {
-            total += book.price * book.quantity;
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${book.title}</td>
-                <td>${book.quantity}</td>
-                <td>${(book.price * book.quantity).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm edit-book" data-index="${index}">&#9998;</button>
-                </td>
+        inventoryTableBody.innerHTML = '';
+        inventory.forEach((item, index) => {
+            const totalAmount = item.quantity * item.price;
+            total += totalAmount;
+
+            const row = `
+                <tr>
+                    <td>${item.title}</td>
+                    <td>${item.quantity}</td>
+                    <td>${totalAmount.toLocaleString()}</td>
+                    <td><button class="btn btn-secondary edit-btn" data-index="${index}"><i class="fas fa-pen"></i></button></td>
+                </tr>
             `;
-            inventoryTableBody.appendChild(row);
+            inventoryTableBody.insertAdjacentHTML('beforeend', row);
         });
 
-        inventoryTotal.innerText = total.toLocaleString();
+        inventoryTotal.textContent = total.toLocaleString();
+        setupEditButtons();
+    }
 
-        document.querySelectorAll('.edit-book').forEach(button => {
+    async function loadStatistics(date) {
+        const response = await fetch('/api/statistics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date })
+        });
+        const statistics = await response.json();
+        let total = 0;
+
+        statisticsTableBody.innerHTML = '';
+        statistics.forEach((item, index) => {
+            const totalAmount = item.quantity * item.price;
+            if (item.action === 'Sold') {
+                total += totalAmount;
+            }
+
+            const row = `
+                <tr>
+                    <td>${item.action}</td>
+                    <td>${item.title}</td>
+                    <td>${item.quantity}</td>
+                    <td>${totalAmount.toLocaleString()}</td>
+                    <td>${new Date(item.timestamp).toLocaleString()}</td>
+                    <td>${item.paymentType}</td>
+                    <td>${item.user}</td>
+                    <td><button class="btn btn-danger delete-btn" data-index="${index}"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+            statisticsTableBody.insertAdjacentHTML('beforeend', row);
+        });
+
+        statisticsTotal.textContent = total.toLocaleString();
+        setupDeleteButtons();
+    }
+
+    function setupEditButtons() {
+        const editButtons = document.querySelectorAll('.edit-btn');
+
+        editButtons.forEach(button => {
             button.addEventListener('click', async (event) => {
                 const index = event.target.dataset.index;
-                const newQuantity = prompt('Enter new quantity:');
                 const password = prompt('Enter password:');
 
                 if (password === 'Rasul9898aa') {
-                    await fetch('/api/edit-book', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ index, newQuantity: parseInt(newQuantity, 10) })
-                    });
-                    loadInventory();
+                    const newQuantity = prompt('Enter new quantity:');
+                    if (newQuantity !== null) {
+                        await fetch('/api/edit-inventory', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ index, quantity: newQuantity })
+                        });
+                        loadInventory();
+                    }
                 } else {
                     alert('Invalid password.');
                 }
@@ -133,40 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function loadStatistics(date) {
-        const response = await fetch('/api/data');
-        const data = await response.json();
-        const formattedDate = date.toLocaleDateString();
+    function setupDeleteButtons() {
+        const deleteButtons = document.querySelectorAll('.delete-btn');
 
-        statisticsTableBody.innerHTML = '';
-        let totalSold = 0;
-
-        data.transactions.forEach((transaction, index) => {
-            const transactionDate = new Date(transaction.timestamp).toLocaleDateString();
-            if (transactionDate === formattedDate) {
-                if (transaction.action === 'Sold') {
-                    totalSold += transaction.total;
-                }
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${transaction.action}</td>
-                    <td>${transaction.book}</td>
-                    <td>${transaction.quantity}</td>
-                    <td>${transaction.total.toLocaleString()}</td>
-                    <td>${transaction.timestamp}</td>
-                    <td>${transaction.paymentType}</td>
-                    <td>${transaction.user}</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm delete-transaction" data-index="${index}">&#128465;</button>
-                    </td>
-                `;
-                statisticsTableBody.appendChild(row);
-            }
-        });
-
-        statisticsTotal.innerText = totalSold.toLocaleString();
-
-        document.querySelectorAll('.delete-transaction').forEach(button => {
+        deleteButtons.forEach(button => {
             button.addEventListener('click', async (event) => {
                 const index = event.target.dataset.index;
                 const password = prompt('Enter password:');

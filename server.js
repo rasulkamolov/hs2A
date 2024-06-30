@@ -1,42 +1,45 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const fs = require('fs');
+const path = require('path');
+
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
+
+let inventory = [
+    { title: "Beginner", quantity: 0, price: 85000 },
+    { title: "Elementary", quantity: 0, price: 85000 },
+    { title: "Pre-Intermediate", quantity: 0, price: 85000 },
+    { title: "Intermediate", quantity: 0, price: 85000 },
+    { title: "Kids Level 1", quantity: 0, price: 60000 },
+    { title: "Kids Level 2", quantity: 0, price: 60000 },
+    { title: "Kids Level 3", quantity: 0, price: 60000 },
+    { title: "Kids Level 4", quantity: 0, price: 60000 },
+    { title: "Kids Level 5", quantity: 0, price: 60000 },
+    { title: "Kids Level 6", quantity: 0, price: 60000 },
+    { title: "Kids High Level 1", quantity: 0, price: 60000 },
+    { title: "Kids High Level 2", quantity: 0, price: 60000 },
+    { title: "Listening Beginner", quantity: 0, price: 30000 },
+    { title: "Listening Elementary", quantity: 0, price: 30000 },
+    { title: "Listening Pre-Intermediate", quantity: 0, price: 30000 },
+    { title: "Listening Intermediate", quantity: 0, price: 35000 }
+];
+
+let transactions = [];
 
 app.use(bodyParser.json());
-app.use(express.static('public'));
-
-app.use(session({
-    secret: 'secretKey',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Note: secure should be true in production with HTTPS
-}));
-
-const dataPath = './data.json';
-
-function readData() {
-    return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-}
-
-function writeData(data) {
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf8');
-}
-
-app.get('/api/data', (req, res) => {
-    res.json(readData());
-});
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({ secret: 'bookinventorysecret', resave: false, saveUninitialized: true }));
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const users = {
-        "Dapa": "Kitobchi00",
-        "Kids": "Kitobchi99"
+
+    const validUsers = {
+        Dapa: 'Kitobchi00',
+        Kids: 'Kitobchi99'
     };
 
-    if (users[username] && users[username] === password) {
+    if (validUsers[username] === password) {
         req.session.user = username;
         res.json({ success: true });
     } else {
@@ -46,105 +49,89 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/add-book', (req, res) => {
     const { title, quantity, user } = req.body;
-    const data = readData();
-    const book = data.books.find(book => book.title === title);
+
+    const book = inventory.find(b => b.title === title);
     if (book) {
         book.quantity += quantity;
+        transactions.push({
+            action: 'Added',
+            title,
+            quantity,
+            price: book.price,
+            timestamp: new Date(),
+            user
+        });
+        res.json({ success: true });
     } else {
-        data.books.push({ title, quantity, price: getPrice(title) });
+        res.status(400).json({ success: false, message: 'Book not found' });
     }
-    data.transactions.push({
-        action: 'Added',
-        book: title,
-        quantity,
-        total: getPrice(title) * quantity,
-        timestamp: new Date().toLocaleString(),
-        user
-    });
-    writeData(data);
-    res.json({ title, quantity });
 });
 
 app.post('/api/sell-book', (req, res) => {
     const { title, quantity, paymentType, user } = req.body;
-    const data = readData();
-    const book = data.books.find(book => book.title === title);
+
+    const book = inventory.find(b => b.title === title);
     if (book) {
         if (book.quantity >= quantity) {
             book.quantity -= quantity;
-            data.transactions.push({
+            transactions.push({
                 action: 'Sold',
-                book: title,
+                title,
                 quantity,
-                total: getPrice(title) * quantity,
-                timestamp: new Date().toLocaleString(),
+                price: book.price,
                 paymentType,
+                timestamp: new Date(),
                 user
             });
-            writeData(data);
-            res.json({ title, quantity, success: true });
+            res.json({ success: true });
         } else {
             res.json({ success: false, message: 'Out of stock' });
         }
     } else {
-        res.json({ success: false, message: 'Book not found' });
+        res.status(400).json({ success: false, message: 'Book not found' });
     }
 });
 
-app.post('/api/edit-book', (req, res) => {
-    const { index, newQuantity } = req.body;
-    const data = readData();
-    data.books[index].quantity = newQuantity;
-    writeData(data);
-    res.json({ success: true });
+app.post('/api/statistics', (req, res) => {
+    const { date } = req.body;
+    const requestedDate = new Date(date);
+    requestedDate.setHours(0, 0, 0, 0);
+
+    const filteredTransactions = transactions.filter(t => {
+        const transactionDate = new Date(t.timestamp);
+        transactionDate.setHours(0, 0, 0, 0);
+        return transactionDate.getTime() === requestedDate.getTime();
+    });
+
+    res.json(filteredTransactions);
+});
+
+app.post('/api/edit-inventory', (req, res) => {
+    const { index, quantity } = req.body;
+
+    if (index >= 0 && index < inventory.length) {
+        inventory[index].quantity = parseInt(quantity);
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ success: false });
+    }
 });
 
 app.post('/api/delete-transaction', (req, res) => {
     const { index } = req.body;
-    const data = readData();
-    data.transactions.splice(index, 1);
-    writeData(data);
-    res.json({ success: true });
+
+    if (index >= 0 && index < transactions.length) {
+        transactions.splice(index, 1);
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ success: false });
+    }
 });
 
-app.get('/api/export-inventory', (req, res) => {
-    const data = readData();
-    const csv = data.books.map(book => `${book.title},${book.quantity},${book.price * book.quantity}`).join('\n');
-    res.header('Content-Type', 'text/csv');
-    res.attachment('current_inventory.csv');
-    res.send(csv);
+app.get('/api/inventory', (req, res) => {
+    res.json(inventory);
 });
 
-app.get('/api/export-todays-statistics', (req, res) => {
-    const data = readData();
-    const csv = data.transactions.map(transaction => `${transaction.action},${transaction.book},${transaction.quantity},${transaction.total},${transaction.timestamp},${transaction.paymentType},${transaction.user}`).join('\n');
-    res.header('Content-Type', 'text/csv');
-    res.attachment('todays_statistics.csv');
-    res.send(csv);
-});
-
-function getPrice(title) {
-    const prices = {
-        "Beginner": 85000,
-        "Elementary": 85000,
-        "Pre-Intermediate": 85000,
-        "Intermediate": 85000,
-        "Kids Level 1": 60000,
-        "Kids Level 2": 60000,
-        "Kids Level 3": 60000,
-        "Kids Level 4": 60000,
-        "Kids Level 5": 60000,
-        "Kids Level 6": 60000,
-        "Kids High Level 1": 60000,
-        "Kids High Level 2": 60000,
-        "Listening Beginner": 30000,
-        "Listening Elementary": 30000,
-        "Listening Pre-Intermediate": 30000,
-        "Listening Intermediate": 35000
-    };
-    return prices[title] || 0;
-}
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
