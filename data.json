@@ -1,0 +1,32 @@
+{
+  "books": [
+    {
+      "title": "Beginner",
+      "price": 85000,
+      "quantity": 9
+    }
+  ],
+  "transactions": [
+    {
+      "action": "Added",
+      "book": "Beginner",
+      "quantity": 10,
+      "total": 850000,
+      "timestamp": "6/27/2024, 5:33:16 PM"
+    },
+    {
+      "action": "Sold",
+      "book": "Beginner",
+      "quantity": 1,
+      "total": 85000,
+      "timestamp": "6/27/2024, 5:33:28 PM"
+    },
+    {
+      "action": "Added",
+      "book": "Beginner",
+      "quantity": 1,
+      "total": 85000,
+      "timestamp": "6/27/2024, 5:36:02 PM"
+    }
+  ]
+}

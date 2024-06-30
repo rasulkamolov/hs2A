@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Inventory</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.css">
+    <style>
+        /* Additional styles can be added here if needed */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                -ms-overflow-style: -ms-autohiding-scrollbar;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Current Inventory</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h4>Total: <span id="totalInventory"></span></h4>
+                <button class="btn btn-secondary mb-3" onclick="exportCurrentInventory()">Export Current Inventory</button>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3>Today's Statistics</h3>
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary" onclick="previousDay()">Previous</button>
+                    <h4 id="statsDate"></h4>
+                    <button class="btn btn-primary" onclick="nextDay()">Next</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="statsTable">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Book</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h4>Total Sold: <span id="totalStats"></span></h4>
+                <button class="btn btn-secondary mb-3" onclick="exportTodaysStatistics()">Export Today's Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
