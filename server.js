@@ -22,7 +22,7 @@ app.get('/api/data', (req, res) => {
 });
 
 app.post('/api/add-book', (req, res) => {
-    const { title, quantity, user } = req.body;
+    const { title, quantity } = req.body;
     const data = readData();
     const book = data.books.find(book => book.title === title);
     if (book) {
@@ -36,14 +36,13 @@ app.post('/api/add-book', (req, res) => {
         quantity,
         total: getPrice(title) * quantity,
         timestamp: new Date().toLocaleString(),
-        user,
     });
     writeData(data);
     res.json({ title, quantity });
 });
 
 app.post('/api/sell-book', (req, res) => {
-    const { title, quantity, paymentType, user } = req.body;
+    const { title, quantity, paymentType } = req.body;
     const data = readData();
     const book = data.books.find(book => book.title === title);
     if (book) {
@@ -56,7 +55,6 @@ app.post('/api/sell-book', (req, res) => {
                 total: getPrice(title) * quantity,
                 timestamp: new Date().toLocaleString(),
                 paymentType,
-                user,
             });
             writeData(data);
             res.json({ title, quantity, success: true });
@@ -76,7 +74,7 @@ app.post('/api/edit-book', (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/api/delete-transaction', (req, res) => {
+app.post('/api.delete-transaction', (req, res) => {
     const { index } = req.body;
     const data = readData();
     data.transactions.splice(index, 1);
@@ -96,7 +94,7 @@ app.get('/api/export-todays-statistics', (req, res) => {
     const data = readData();
     const today = new Date().toDateString();
     const csv = data.transactions.filter(transaction => new Date(transaction.timestamp).toDateString() === today)
-        .map(transaction => `${transaction.action},${transaction.book},${transaction.quantity},${transaction.total},${transaction.timestamp},${transaction.paymentType || ''},${transaction.user}`)
+        .map(transaction => `${transaction.action},${transaction.book},${transaction.quantity},${transaction.total},${transaction.timestamp},${transaction.paymentType || ''}`)
         .join('\n');
     res.header('Content-Type', 'text/csv');
     res.attachment('todays_statistics.csv');
@@ -117,12 +115,12 @@ function getPrice(title) {
         "Kids Level 6": 60000,
         "Kids High Level 1": 60000,
         "Kids High Level 2": 60000,
-        "Listening Beginner": 60000,
-        "Listening Elementary": 60000,
-        "Listening Pre-Intermediate": 60000,
-        "Listening Intermediate": 60000
+        "Listening Beginner": 30000,
+        "Listening Elementary": 30000,
+        "Listening Pre-Intermediate": 30000,
+        "Listening Intermediate": 35000,
     };
-    return prices[title] || 0;
+    return prices[title];
 }
 
 app.listen(port, () => {

@@ -10,35 +10,16 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="container mt-4" id="loginSection">
-        <h1 class="mb-4">Login</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" class="form-control" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-    </div>
-
-    <div class="container mt-4" id="mainContent" style="display: none;">
+    <div class="container mt-4">
         <h1 class="mb-4">Book Inventory</h1>
         
         <div class="row mb-3">
             <div class="col-md-6">
-                <h2>Add Book</h2>
+                <h2>Kitob qo'shish</h2>
                 <form id="addBookForm">
                     <div class="form-group">
-                        <label for="bookTitle">Book Title</label>
+                        <label for="bookTitle">Kitob nomi</label>
                         <select class="form-control" id="bookTitle">
-                            <option>Beginner</option>
-                            <option>Elementary</option>
-                            <option>Pre-Intermediate</option>
-                            <option>Intermediate</option>
                             <option>Kids Level 1</option>
                             <option>Kids Level 2</option>
                             <option>Kids Level 3</option>
@@ -54,18 +35,18 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="quantity">Quantity</label>
+                        <label for="quantity">Kitob soni</label>
                         <input type="number" class="form-control" id="quantity" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Book</button>
+                    <button type="submit" class="btn btn-primary">Kitob qo'shish</button>
                 </form>
             </div>
 
             <div class="col-md-6">
-                <h2>Sell Book</h2>
+                <h2>Kitob Sotish</h2>
                 <form id="sellBookForm">
                     <div class="form-group">
-                        <label for="sellBookTitle">Book Title</label>
+                        <label for="sellBookTitle">Kitob nomi</label>
                         <select class="form-control" id="sellBookTitle">
                             <option>Beginner</option>
                             <option>Elementary</option>
@@ -86,70 +67,68 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="sellQuantity">Quantity</label>
+                        <label for="sellQuantity">Kitob soni</label>
                         <input type="number" class="form-control" id="sellQuantity" required>
                     </div>
                     <div class="form-group">
-                        <label for="paymentType">Payment Type</label>
+                        <label for="paymentType">To'lov Turi</label>
                         <select class="form-control" id="paymentType">
-                            <option>Cash</option>
+                            <option>Naxt</option>
                             <option>Click</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-danger">Sell Book</button>
+                    <button type="submit" class="btn btn-danger">Kitobni Sotish</button>
                 </form>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-12">
-                <h2>Current Inventory</h2>
+                <h2>Skladda Hozirda Mavjud</h2>
                 <table class="table table-bordered" id="inventoryTable">
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th>Quantity</th>
-                            <th>Total Value (UZS)</th>
+                            <th>Nomi</th>
+                            <th>Soni</th>
+                            <th>Umumiy Qiymati (UZS)</th>
                             <th>Edit</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
                 <div class="text-right">
-                    <button class="btn btn-success" onclick="exportCurrentInventory()">Export Current Inventory</button>
+                    <button class="btn btn-success" onclick="exportCurrentInventory()">Sklad Otchot Yuklab olish</button>
                 </div>
             </div>
         </div>
 
         <div class="row mt-4">
             <div class="col-md-12">
-                <h2>Today's Statistics</h2>
+                <h2>Bugunki Statistika</h2>
                 <div class="d-flex justify-content-between mb-3">
-                    <button class="btn btn-primary" onclick="previousDay()">Previous Day</button>
+                    <button class="btn btn-primary" onclick="previousDay()">Oldingi Kun</button>
                     <div id="currentDateDisplay"></div>
-                    <button class="btn btn-primary" onclick="nextDay()">Next Day</button>
+                    <button class="btn btn-primary" onclick="nextDay()">Keyingi Kun</button>
                 </div>
                 <table class="table table-bordered" id="todaysStatsTable">
                     <thead>
                         <tr>
-                            <th>Action</th>
-                            <th>Book</th>
-                            <th>Quantity</th>
-                            <th>Total (UZS)</th>
-                            <th>Timestamp</th>
-                            <th>Payment Type</th>
-                            <th>User</th>
+                            <th>Statusi</th>
+                            <th>Kitob</th>
+                            <th>Soni</th>
+                            <th>Umumiy Qiymati (UZS)</th>
+                            <th>Vaqt va Sanasi</th>
+                            <th>To'lov Turi</th>
                             <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
                 <div class="text-right">
-                    <button class="btn btn-success" onclick="exportTodaysStatistics()">Export Today's Statistics</button>
+                    <button class="btn btn-success" onclick="exportTodaysStatistics()">Bugunki Otchotni olish</button>
                 </div>
             </div>
         </div>
     </div>
 </body>
 </html>
-    

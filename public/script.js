@@ -1,7 +1,6 @@
-const BASE_URL = '';
+const BASE_URL = 'https://harvardbks-974c895495ee.herokuapp.com';
 
 let currentDate = new Date();
-let currentUser = '';
 
 function updateDateDisplay() {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -34,7 +33,7 @@ function loadInventory() {
 
             const totalRow = document.createElement('tr');
             totalRow.innerHTML = `
-                <td colspan="2"><strong>Total Value</strong></td>
+                <td colspan="2"><strong>Umumiy Summa</strong></td>
                 <td colspan="2"><strong>${totalValue.toLocaleString()} UZS</strong></td>
             `;
             inventoryTableBody.appendChild(totalRow);
@@ -70,41 +69,27 @@ function loadTodaysStats(date) {
                     <td>${transaction.total.toLocaleString()}</td>
                     <td>${transaction.timestamp}</td>
                     <td>${transaction.paymentType || ''}</td>
-                    <td>${transaction.user}</td>
                     <td><button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})"><i class="fas fa-trash"></i></button></td>
                 `;
 
                 statsTableBody.appendChild(row);
             });
 
-            const totalsRow = document.createElement('tr');
-            totalsRow.innerHTML = `
-                <td colspan="2"><strong>Total Sales</strong></td>
-                <td colspan="2"><strong>${totalSales.toLocaleString()} UZS</strong></td>
-                <td colspan="2"><strong>Books Added</strong></td>
-                <td colspan="2"><strong>${addedBooks}</strong></td>
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td colspan="3"><strong>Umumiy Tushum</strong></td>
+                <td colspan="4"><strong>${totalSales.toLocaleString()} UZS</strong></td>
             `;
-            statsTableBody.appendChild(totalsRow);
+            statsTableBody.appendChild(totalRow);
+
+            const addedRow = document.createElement('tr');
+            addedRow.innerHTML = `
+                <td colspan="3"><strong>Umumiy qo'shilgan kitoblar</strong></td>
+                <td colspan="4"><strong>${addedBooks.toLocaleString()} Books</strong></td>
+            `;
+            statsTableBody.appendChild(addedRow);
         });
 }
-
-document.getElementById('loginForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    if ((username === 'Dapa' && password === 'Kitobchi00') || (username === 'Kids' && password === 'Kitobchi99')) {
-        currentUser = username;
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        loadInventory();
-        loadTodaysStats(currentDate);
-        updateDateDisplay();
-    } else {
-        alert('Incorrect username or password.');
-    }
-});
 
 document.getElementById('addBookForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -125,11 +110,11 @@ function addBook() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, quantity, user: currentUser }),
+        body: JSON.stringify({ title, quantity }),
     })
         .then(response => response.json())
         .then(data => {
-            alert(`${data.quantity} copies of "${data.title}" added.`);
+            alert(`${data.quantity}ta "${data.title}" kitobi qo'shildi.`);
             loadInventory();
             loadTodaysStats(currentDate);
         });
@@ -145,12 +130,12 @@ function sellBook() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, quantity, paymentType, user: currentUser }),
+        body: JSON.stringify({ title, quantity, paymentType }),
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`${data.quantity} copies of "${data.title}" sold.`);
+                alert(`${data.quantity}ta "${data.title}" kitobi sotildi.`);
             } else {
                 alert(`Error: ${data.message}`);
             }
