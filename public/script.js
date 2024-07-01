@@ -1,140 +1,248 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('login-form');
-    const addBookForm = document.getElementById('addBookForm');
-    const sellBookForm = document.getElementById('sellBookForm');
-    const inventoryTableBody = document.getElementById('inventoryTableBody');
-    const statisticsTableBody = document.getElementById('statisticsTableBody');
-    const inventoryTotal = document.getElementById('inventoryTotal');
-    const statisticsTotal = document.getElementById('statisticsTotal');
-    const previousDayButton = document.getElementById('previousDay');
-    const nextDayButton = document.getElementById('nextDay');
-    const loginSection = document.getElementById('login-section');
-    const inventorySection = document.getElementById('inventory-section');
-    const statisticsSection = document.getElementById('statistics-section');
-    let currentUser = null;
-    let currentDate = new Date();
+const BASE_URL = '';
 
-    loginForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+let currentDate = new Date();
+let currentUser = '';
 
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
+function updateDateDisplay() {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDateDisplay').innerText = currentDate.toLocaleDateString(undefined, options);
+}
 
-        const result = await response.json();
-        if (result.success) {
-            currentUser = username;
-            loginSection.style.display = 'none';
-            inventorySection.style.display = 'block';
-            statisticsSection.style.display = 'block';
-            loadInventory();
-            loadStatistics(currentDate);
-        } else {
-            alert('Invalid username or password');
-        }
-    });
+function loadInventory() {
+    fetch(`${BASE_URL}/api/data`)
+        .then(response => response.json())
+        .then(data => {
+            const inventoryTableBody = document.querySelector('#inventoryTable tbody');
+            inventoryTableBody.innerHTML = '';
 
-    addBookForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const title = document.getElementById('bookTitle').value;
-        const quantity = parseInt(document.getElementById('quantity').value);
+            let totalValue = 0;
 
-        const response = await fetch('/api/add-book', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, quantity, user: currentUser })
-        });
+            data.books.forEach((book, index) => {
+                const row = document.createElement('tr');
+                const total = book.price * book.quantity;
+                totalValue += total;
 
-        const result = await response.json();
-        if (result.success) {
-            alert(`Added ${quantity} copies of ${title}`);
-            loadInventory();
-        } else {
-            alert('Failed to add book');
-        }
-    });
+                row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.quantity}</td>
+                    <td>${total.toLocaleString()}</td>
+                    <td><button class="btn btn-primary btn-sm" onclick="editBook(${index}, '${book.title}')"><i class="fas fa-pen"></i></button></td>
+                `;
 
-    sellBookForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const title = document.getElementById('sellBookTitle').value;
-        const quantity = parseInt(document.getElementById('sellQuantity').value);
-        const paymentType = document.getElementById('paymentType').value;
+                inventoryTableBody.appendChild(row);
+            });
 
-        const response = await fetch('/api/sell-book', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, quantity, paymentType, user: currentUser })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert(`Sold ${quantity} copies of ${title}`);
-            loadStatistics(currentDate);
-        } else {
-            alert(result.message);
-        }
-    });
-
-    previousDayButton.addEventListener('click', () => {
-        currentDate.setDate(currentDate.getDate() - 1);
-        loadStatistics(currentDate);
-    });
-
-    nextDayButton.addEventListener('click', () => {
-        currentDate.setDate(currentDate.getDate() + 1);
-        loadStatistics(currentDate);
-    });
-
-    async function loadInventory() {
-        const response = await fetch('/api/inventory');
-        const inventory = await response.json();
-        inventoryTableBody.innerHTML = '';
-        let total = 0;
-
-        inventory.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.title}</td>
-                <td>${item.quantity}</td>
-                <td>${item.quantity * 100}</td>
-                <td><button class="btn btn-warning btn-edit">✎</button></td>
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td colspan="2"><strong>Total Value</strong></td>
+                <td colspan="2"><strong>${totalValue.toLocaleString()} UZS</strong></td>
             `;
-            inventoryTableBody.appendChild(row);
-            total += item.quantity * 100;
+            inventoryTableBody.appendChild(totalRow);
         });
+}
 
-        inventoryTotal.textContent = total;
+function loadTodaysStats(date) {
+    fetch(`${BASE_URL}/api/data`)
+        .then(response => response.json())
+        .then(data => {
+            const statsTableBody = document.querySelector('#todaysStatsTable tbody');
+            statsTableBody.innerHTML = '';
+
+            const filteredTransactions = data.transactions.filter(transaction => {
+                return new Date(transaction.timestamp).toDateString() === date.toDateString();
+            });
+
+            let totalSales = 0;
+            let addedBooks = 0;
+
+            filteredTransactions.forEach((transaction, index) => {
+                const row = document.createElement('tr');
+                if (transaction.action === 'Sold') {
+                    totalSales += transaction.total;
+                } else if (transaction.action === 'Added') {
+                    addedBooks += transaction.quantity;
+                }
+
+                row.innerHTML = `
+                    <td>${transaction.action}</td>
+                    <td>${transaction.book}</td>
+                    <td>${transaction.quantity}</td>
+                    <td>${transaction.total.toLocaleString()}</td>
+                    <td>${transaction.timestamp}</td>
+                    <td>${transaction.paymentType || ''}</td>
+                    <td>${transaction.user}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteTransaction(${index})"><i class="fas fa-trash"></i></button></td>
+                `;
+
+                statsTableBody.appendChild(row);
+            });
+
+            const totalsRow = document.createElement('tr');
+            totalsRow.innerHTML = `
+                <td colspan="2"><strong>Total Sales</strong></td>
+                <td colspan="2"><strong>${totalSales.toLocaleString()} UZS</strong></td>
+                <td colspan="2"><strong>Books Added</strong></td>
+                <td colspan="2"><strong>${addedBooks}</strong></td>
+            `;
+            statsTableBody.appendChild(totalsRow);
+        });
+}
+
+document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if ((username === 'Dapa' && password === 'Kitobchi00') || (username === 'Kids' && password === 'Kitobchi99')) {
+        currentUser = username;
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        loadInventory();
+        loadTodaysStats(currentDate);
+        updateDateDisplay();
+    } else {
+        alert('Incorrect username or password.');
     }
+});
 
-    async function loadStatistics(date) {
-        const formattedDate = date.toISOString().split('T')[0];
-        const response = await fetch(`/api/statistics?date=${formattedDate}`);
-        const statistics = await response.json();
-        statisticsTableBody.innerHTML = '';
-        let totalSold = 0;
+document.getElementById('addBookForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    addBook();
+});
 
-        statistics.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.action}</td>
-                <td>${item.title}</td>
-                <td>${item.quantity}</td>
-                <td>${item.quantity * 100}</td>
-                <td>${item.date}</td>
-                <td>${item.paymentType}</td>
-                <td>${item.user}</td>
-                <td><button class="btn btn-danger btn-delete">🗑</button></td>
-            `;
-            statisticsTableBody.appendChild(row);
-            if (item.action === 'sold') {
-                totalSold += item.quantity * 100;
+document.getElementById('sellBookForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    sellBook();
+});
+
+function addBook() {
+    const title = document.getElementById('bookTitle').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+
+    fetch(`${BASE_URL}/api/add-book`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, quantity, user: currentUser }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            alert(`${data.quantity} copies of "${data.title}" added.`);
+            loadInventory();
+            loadTodaysStats(currentDate);
+        });
+}
+
+function sellBook() {
+    const title = document.getElementById('sellBookTitle').value;
+    const quantity = parseInt(document.getElementById('sellQuantity').value);
+    const paymentType = document.getElementById('paymentType').value;
+
+    fetch(`${BASE_URL}/api/sell-book`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, quantity, paymentType, user: currentUser }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`${data.quantity} copies of "${data.title}" sold.`);
+            } else {
+                alert(`Error: ${data.message}`);
             }
+            loadInventory();
+            loadTodaysStats(currentDate);
         });
+}
 
-        statisticsTotal.textContent = totalSold;
+function editBook(index, title) {
+    const password = prompt("Enter password to edit:");
+    if (password === 'Rasul9898aa') {
+        const newQuantity = prompt(`Enter new quantity for ${title}:`);
+        if (newQuantity !== null) {
+            fetch(`${BASE_URL}/api/edit-book`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index, newQuantity: parseInt(newQuantity) }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loadInventory();
+                    loadTodaysStats(currentDate);
+                });
+        }
+    } else {
+        alert('Incorrect password.');
     }
+}
+
+function deleteTransaction(index) {
+    const password = prompt("Enter password to delete:");
+    if (password === 'Rasul9898aa') {
+        fetch(`${BASE_URL}/api/delete-transaction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ index }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                loadTodaysStats(currentDate);
+            });
+    } else {
+        alert('Incorrect password.');
+    }
+}
+
+function exportCurrentInventory() {
+    fetch(`${BASE_URL}/api/export-inventory`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'current_inventory.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+}
+
+function exportTodaysStatistics() {
+    fetch(`${BASE_URL}/api/export-todays-statistics`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'todays_statistics.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+}
+
+function previousDay() {
+    currentDate.setDate(currentDate.getDate() - 1);
+    updateDateDisplay();
+    loadTodaysStats(currentDate);
+}
+
+function nextDay() {
+    currentDate.setDate(currentDate.getDate() + 1);
+    updateDateDisplay();
+    loadTodaysStats(currentDate);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    updateDateDisplay();
+    loadInventory();
+    loadTodaysStats(currentDate);
 });
