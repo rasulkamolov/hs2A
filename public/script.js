@@ -1,4 +1,4 @@
-const BASE_URL = 'https://harvardbks-974c895495ee.herokuapp.com';
+const BASE_URL = 'https://kitobchi-d505dd994d30.herokuapp.com';
 
 let currentDate = new Date();
 
